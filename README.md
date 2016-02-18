@@ -11,13 +11,13 @@ A Golang project allowing retrieval of HTML metadata of content driven sites.
 
 ## Using MetaMonster in my Go project
 ```go
-import "github.com/briannewsom/metamonster"
+import "github.com/briannewsom/metamonster/infofetcher"
 
 func main(){
   url := "https://medium.com/@sarah_k_mock/meat-is-dead-long-live-meat-a86a7cfe7ecf"
   
-  metadata := metamonster.GetInfoForUrl(url)
+  metadata := infofetcher.GetInfoForUrl(url)
 
-  metamonster.PrintMetadata(*metadata)
+  infofetcher.PrintMetadata(*metadata)
 }
 ```
