@@ -7,18 +7,6 @@ import (
 	"testing"
 )
 
-/*
-	urls := []string{
-		// NY Times
-		"http://www.nytimes.com/2016/02/17/us/politics/senator-charles-grassley-hearings-supreme-court-nominee.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news",
-		// TheGuardian
-		"http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china",
-		// Medium
-		"https://medium.com/@fjmubeen/ai-no-longer-understand-my-phd-dissertation-and-what-this-means-for-mathematics-education-1d40708f61c#.mtqtdl9gm",
-		// Blog
-		"http://markmanson.net/not-giving-a-fuck"}
-*/
-
 const testDir = "_test_res"
 
 func TestParseData(t *testing.T) {
@@ -33,7 +21,7 @@ func TestParseData(t *testing.T) {
 		if err != nil {
 			t.Errorf("Opening test file %s returned error - %s", f, err)
 		} else {
-			parseData(r, &m)
+			ParseData(r, &m)
 
 			err = hasAllData(m)
 
@@ -56,8 +44,8 @@ func getFileReader(name string) (io.Reader, error) {
 }
 
 func hasAllData(m Metadata) error {
-	if m.TitleText == "" {
-		return errors.New("No TitleText")
+	if m.HTMLTitle == "" {
+		return errors.New("No HTML Title")
 	}
 
 	if m.Title == "" {
@@ -86,3 +74,11 @@ func hasAllData(m Metadata) error {
 
 	return nil
 }
+
+/* Where the test data is retrieved from
+testUrls := []string{
+	"http://www.nytimes.com/2016/02/17/us/politics/senator-charles-grassley-hearings-supreme-court-nominee.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=first-column-region&region=top-news&WT.nav=top-news",
+	"http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china",
+	"https://medium.com/@fjmubeen/ai-no-longer-understand-my-phd-dissertation-and-what-this-means-for-mathematics-education-1d40708f61c#.mtqtdl9gm",
+	"http://markmanson.net/not-giving-a-fuck"}
+*/

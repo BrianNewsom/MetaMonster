@@ -1,29 +1,29 @@
 package main
 
 import (
-	"crypto/tls"
-	"errors"
 	"fmt"
 	"golang.org/x/net/html"
-	"golang.org/x/net/publicsuffix"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
+	"os"
+
+	"github.com/briannewsom/metamonster/util"
 )
 
-type Metadata struct {
-	TitleText     string
-	Title         string
-	Author        string
-	Description   string
-	Image         string
-	PublishedDate string
-	URL           url.URL
-}
+const defaultUrl = "http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china"
 
 func main() {
-	u := "http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china"
+	/* If given a url, use it, otherwise default to defaultUrl */
+	var u string
+
+	if len(os.Args) > 1 {
+		u = os.Args[1]
+	} else {
+		u = defaultUrl
+	}
+
+	fmt.Printf("Retrieving metadata for url %s\n", u)
 
 	m := GetInfoForUrl(u)
 
@@ -34,38 +34,27 @@ func GetInfoForUrl(u string) *Metadata {
 	m := Metadata{}
 
 	var client http.Client
-	buildHttpClient(true, true, 10, &client)
+	util.BuildHttpClient(true, true, 10, &client)
 	req, _ := http.NewRequest("GET", u, nil)
 	resp, _ := client.Do(req)
 
-	parseData(resp.Body, &m)
+	ParseData(resp.Body, &m)
 
 	return &m
 }
 
-func printMetadata(m Metadata) {
-	fmt.Printf("TitleText: %s\n", m.TitleText)
-	fmt.Printf("Title: %s\n", m.Title)
-	fmt.Printf("Author: %s\n", m.Author)
-	fmt.Printf("Description: %s\n", m.Description)
-	fmt.Printf("Image: %s\n", m.Image)
-	fmt.Printf("Published Date: %s\n", m.PublishedDate)
-	fmt.Printf("URL: %s\n", m.URL.String())
-}
-
-func parseData(b io.Reader, m *Metadata) {
+func ParseData(b io.Reader, m *Metadata) {
 	d, _ := html.Parse(b)
 	var f func(*html.Node)
 
 	f = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "title" {
 			title := n.FirstChild.Data
-			m.Title = title
+			m.HTMLTitle = title
 		}
 		if n.Type == html.ElementNode && n.Data == "meta" {
 			match := map[string]bool{}
 			for _, a := range n.Attr {
-				// fmt.Printf("%s - %s\n", m.Key, m.Val)
 				if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
 					match["description"] = true
 				}
@@ -74,11 +63,11 @@ func parseData(b io.Reader, m *Metadata) {
 					match["description"] = false
 				}
 				if a.Key == "property" && a.Val == "og:title" {
-					match["og:title"] = true
+					match["title"] = true
 				}
-				if a.Key == "content" && match["og:title"] {
-					m.TitleText = a.Val
-					match["og:title"] = false
+				if a.Key == "content" && match["title"] {
+					m.Title = a.Val
+					match["title"] = false
 				}
 				if (a.Key == "name" && a.Val == "author") || (a.Key == "property" && a.Val == "article:author") {
 					match["author"] = true
@@ -110,46 +99,10 @@ func parseData(b io.Reader, m *Metadata) {
 					match["url"] = false
 				}
 			}
-
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			f(c)
 		}
 	}
 	f(d)
-}
-
-func buildHttpClient(insecureSkipVerify bool, cookieJar bool, maxRedirects int, client *http.Client) {
-	// If we're having ssl issues, enable this to ignore the cert
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: insecureSkipVerify,
-		},
-	}
-
-	// Set maximum redirects
-	client.CheckRedirect = func() func(req *http.Request, via []*http.Request) error {
-		redirects := 0
-		return func(req *http.Request, via []*http.Request) error {
-			if redirects > maxRedirects {
-				return errors.New("stopped after 30 redirects")
-			}
-			redirects++
-			return nil
-		}
-	}()
-
-	// To store and pass cookies - some sites require this.
-	if cookieJar {
-		options := cookiejar.Options{
-			PublicSuffixList: publicsuffix.List,
-		}
-
-		jar, err := cookiejar.New(&options)
-		if err != nil {
-			panic(err)
-		}
-
-		client.Jar = jar
-	}
 }
