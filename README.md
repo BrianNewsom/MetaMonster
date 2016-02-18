@@ -1,4 +1,6 @@
 # MetaMonster
+![Build button](https://travis-ci.org/BrianNewsom/MetaMonster.svg?branch=master)
+
 A Golang project allowing retrieval of HTML metadata of content driven sites.
 
 ## Example
