@@ -1,4 +1,4 @@
-package infofetcher
+package fetcher
 
 import (
 	"golang.org/x/net/html"
@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/briannewsom/metamonster/models/metadata"
 	"github.com/briannewsom/metamonster/util"
 )
 
-func GetInfoForUrl(u string) *Metadata {
-	m := Metadata{}
+func GetInfoForUrl(u string) *metadata.Metadata {
+	m := metadata.Metadata{}
 
 	var client http.Client
 	util.BuildHttpClient(true, true, 10, &client)
@@ -22,7 +23,7 @@ func GetInfoForUrl(u string) *Metadata {
 	return &m
 }
 
-func ParseData(b io.Reader, m *Metadata) {
+func ParseData(b io.Reader, m *metadata.Metadata) {
 	d, _ := html.Parse(b)
 	var f func(*html.Node)
 

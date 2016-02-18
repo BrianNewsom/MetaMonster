@@ -1,19 +1,30 @@
-package infofetcher
+package metadata
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 )
 
 type Metadata struct {
 	/* TitleText often includes */
-	HTMLTitle     string
-	Title         string
-	Author        string
-	Description   string
-	Image         string
-	PublishedDate string
-	URL           url.URL
+	HTMLTitle     string  `json:"html_title"`
+	Title         string  `json:"title"`
+	Author        string  `json:"author"`
+	Description   string  `json:"description"`
+	Image         string  `json:"image"`
+	PublishedDate string  `json:"published_date"`
+	URL           url.URL `json:"url"`
+}
+
+func (m Metadata) ToJson() []byte {
+	j, err := json.Marshal(m)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return j
 }
 
 func PrintMetadata(m Metadata) {

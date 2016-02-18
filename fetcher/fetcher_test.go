@@ -1,10 +1,12 @@
-package infofetcher
+package fetcher
 
 import (
 	"errors"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/briannewsom/metamonster/models/metadata"
 )
 
 const testDir = "_test_res"
@@ -14,7 +16,7 @@ func TestParseData(t *testing.T) {
 
 	for _, f := range files {
 
-		m := Metadata{}
+		m := metadata.Metadata{}
 
 		r, err := getFileReader(f)
 
@@ -43,7 +45,7 @@ func getFileReader(name string) (io.Reader, error) {
 	return r, nil
 }
 
-func hasAllData(m Metadata) error {
+func hasAllData(m metadata.Metadata) error {
 	if m.HTMLTitle == "" {
 		return errors.New("No HTML Title")
 	}
