@@ -32,50 +32,20 @@ func ParseData(b io.Reader, m *Metadata) {
 			m.HTMLTitle = title
 		}
 		if n.Type == html.ElementNode && n.Data == "meta" {
-			match := map[string]bool{}
 			for _, a := range n.Attr {
 				if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
-					match["description"] = true
-				}
-				if a.Key == "content" && match["description"] && a.Val != "" {
-					m.Description = a.Val
-					match["description"] = false
-				}
-				if a.Key == "property" && a.Val == "og:title" {
-					match["title"] = true
-				}
-				if a.Key == "content" && match["title"] && a.Val != "" {
-					m.Title = a.Val
-					match["title"] = false
-				}
-				if (a.Key == "name" && a.Val == "author") || (a.Key == "property" && a.Val == "article:author") {
-					match["author"] = true
-				}
-				if a.Key == "content" && match["author"] && a.Val != "" {
-					m.Author = a.Val
-					match["author"] = false
-				}
-				if a.Key == "property" && a.Val == "og:image" {
-					match["image"] = true
-				}
-				if a.Key == "content" && match["image"] && a.Val != "" {
-					m.Image = a.Val
-					match["image"] = false
-				}
-				if a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published") {
-					match["published"] = true
-				}
-				if a.Key == "content" && match["published"] && a.Val != "" {
-					m.PublishedDate = a.Val
-					match["published"] = false
-				}
-				if a.Key == "property" && a.Val == "og:url" {
-					match["url"] = true
-				}
-				if a.Key == "content" && match["url"] && a.Val != "" {
-					u, _ := url.Parse(a.Val)
+					m.Description = getContent(n.Attr)
+				} else if a.Key == "property" && a.Val == "og:title" {
+					m.Title = getContent(n.Attr)
+				} else if (a.Key == "name" && a.Val == "author") || (a.Key == "property" && a.Val == "article:author") {
+					m.Author = getContent(n.Attr)
+				} else if a.Key == "property" && a.Val == "og:image" {
+					m.Image = getContent(n.Attr)
+				} else if a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published") {
+					m.PublishedDate = getContent(n.Attr)
+				} else if a.Key == "property" && a.Val == "og:url" {
+					u, _ := url.Parse(getContent(n.Attr))
 					m.URL = *u
-					match["url"] = false
 				}
 			}
 		}
@@ -84,4 +54,13 @@ func ParseData(b io.Reader, m *Metadata) {
 		}
 	}
 	f(d)
+}
+
+func getContent(attr []html.Attribute) string {
+	for _, a := range attr {
+		if a.Key == "content" {
+			return a.Val
+		}
+	}
+	return ""
 }
