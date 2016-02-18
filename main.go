@@ -7,43 +7,53 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/publicsuffix"
 	"io"
-	//	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 )
 
 type Metadata struct {
-	TitleText   string
-	Title       string
-	Description string
+	TitleText     string
+	Title         string
+	Author        string
+	Description   string
+	Image         string
+	PublishedDate string
+	URL           url.URL
 }
 
 func main() {
-	var client http.Client
+	u := "http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china"
 
-	buildHttpClient(true, true, 10, &client)
+	m := GetInfoForUrl(u)
 
-	url := "http://www.theguardian.com/technology/2016/feb/17/apple-fbi-encryption-san-bernardino-russia-china"
+	printMetadata(*m)
+}
 
-	req, _ := http.NewRequest("GET", url, nil)
-
-	resp, _ := client.Do(req)
-
-	// print(*resp)
+func GetInfoForUrl(u string) *Metadata {
 	m := Metadata{}
+
+	var client http.Client
+	buildHttpClient(true, true, 10, &client)
+	req, _ := http.NewRequest("GET", u, nil)
+	resp, _ := client.Do(req)
 
 	parseData(resp.Body, &m)
 
-	print(m)
+	return &m
 }
 
-func print(m Metadata) {
+func printMetadata(m Metadata) {
 	fmt.Printf("TitleText: %s\n", m.TitleText)
 	fmt.Printf("Title: %s\n", m.Title)
+	fmt.Printf("Author: %s\n", m.Author)
 	fmt.Printf("Description: %s\n", m.Description)
+	fmt.Printf("Image: %s\n", m.Image)
+	fmt.Printf("Published Date: %s\n", m.PublishedDate)
+	fmt.Printf("URL: %s\n", m.URL.String())
 }
 
-func parseData(b io.ReadCloser, m *Metadata) {
+func parseData(b io.Reader, m *Metadata) {
 	d, _ := html.Parse(b)
 	var f func(*html.Node)
 
@@ -56,7 +66,7 @@ func parseData(b io.ReadCloser, m *Metadata) {
 			match := map[string]bool{}
 			for _, a := range n.Attr {
 				// fmt.Printf("%s - %s\n", m.Key, m.Val)
-				if a.Key == "name" && a.Val == "description" {
+				if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
 					match["description"] = true
 				}
 				if a.Key == "content" && match["description"] {
@@ -70,6 +80,35 @@ func parseData(b io.ReadCloser, m *Metadata) {
 					m.TitleText = a.Val
 					match["og:title"] = false
 				}
+				if (a.Key == "name" && a.Val == "author") || (a.Key == "property" && a.Val == "article:author") {
+					match["author"] = true
+				}
+				if a.Key == "content" && match["author"] {
+					m.Author = a.Val
+					match["author"] = false
+				}
+				if a.Key == "property" && a.Val == "og:image" {
+					match["image"] = true
+				}
+				if a.Key == "content" && match["image"] {
+					m.Image = a.Val
+					match["image"] = false
+				}
+				if a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published") {
+					match["published"] = true
+				}
+				if a.Key == "content" && match["published"] {
+					m.PublishedDate = a.Val
+					match["published"] = false
+				}
+				if a.Key == "property" && a.Val == "og:url" {
+					match["url"] = true
+				}
+				if a.Key == "content" && match["url"] {
+					u, _ := url.Parse(a.Val)
+					m.URL = *u
+					match["url"] = false
+				}
 			}
 
 		}
@@ -79,21 +118,6 @@ func parseData(b io.ReadCloser, m *Metadata) {
 	}
 	f(d)
 }
-
-/*
-func print(resp http.Response) {
-	fmt.Printf("Header\n")
-	for key, val := range resp.Header {
-		fmt.Printf("%s => %s\n", key, val)
-	}
-
-	fmt.Printf("Body\n")
-
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	fmt.Printf("%s\n", body)
-}
-*/
 
 func buildHttpClient(insecureSkipVerify bool, cookieJar bool, maxRedirects int, client *http.Client) {
 	// If we're having ssl issues, enable this to ignore the cert
