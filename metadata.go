@@ -16,7 +16,7 @@ type Metadata struct {
 	URL           url.URL
 }
 
-func printMetadata(m Metadata) {
+func PrintMetadata(m Metadata) {
 	fmt.Printf("---- Printing Metadata ----\n")
 	fmt.Printf("HTML Title: %s\n", m.HTMLTitle)
 	fmt.Printf("Title: %s\n", m.Title)
