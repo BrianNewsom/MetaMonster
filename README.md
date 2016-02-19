@@ -37,7 +37,7 @@ import (
 func main(){
   url := "https://medium.com/@sarah_k_mock/meat-is-dead-long-live-meat-a86a7cfe7ecf"
 
-  m := fetcher.GetInfoForUrl(url)
+  m, err := fetcher.GetInfoForUrl(url)
 
   metadata.PrintMetadata(*m)
 }

@@ -11,20 +11,27 @@ import (
 
 const testDir = "_test_res"
 
+func TestGetInfoForUrl(t *testing.T) {
+	badURL := "http://this-url-really-shouldn't-exist.com"
+	_, err := GetInfoForUrl(badURL)
+
+	if err == nil {
+		t.Errorf("A bad URL should give an error, got nil")
+	}
+
+}
+
 func TestParseData(t *testing.T) {
 	files := []string{"medium.html", "nytimes.html", "theguardian.html", "blog.html", "dailycamera.html"}
 
 	for _, f := range files {
-
 		m := metadata.Metadata{}
-
 		r, err := getFileReader(f)
 
 		if err != nil {
 			t.Errorf("Opening test file %s returned error - %s", f, err)
 		} else {
 			ParseData(r, &m)
-
 			err = hasAllData(m)
 
 			if err != nil {
@@ -32,7 +39,6 @@ func TestParseData(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func getFileReader(name string) (io.Reader, error) {

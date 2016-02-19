@@ -18,7 +18,12 @@ func main() {
 	if *u == "" {
 		fmt.Printf("No URL provided, please provide a url using -url=url")
 	} else {
-		m := fetcher.GetInfoForUrl(*u)
+		m, err := fetcher.GetInfoForUrl(*u)
+
+		if err != nil {
+			fmt.Printf("Failed to retrieve metadata - %s", err)
+			return
+		}
 
 		switch *format {
 		case "plaintext":

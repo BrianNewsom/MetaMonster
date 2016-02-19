@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"errors"
 	"golang.org/x/net/html"
 	"io"
 	"net/http"
@@ -10,17 +11,27 @@ import (
 	"github.com/briannewsom/metamonster/util"
 )
 
-func GetInfoForUrl(u string) *metadata.Metadata {
+func GetInfoForUrl(u string) (*metadata.Metadata, error) {
 	m := metadata.Metadata{}
 
 	var client http.Client
 	util.BuildHttpClient(true, true, 10, &client)
 	req, _ := http.NewRequest("GET", u, nil)
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, errors.New("GET request failed")
+	}
 
 	ParseData(resp.Body, &m)
 
-	return &m
+	/* Fill in any data that we can assume if we don't have metadata */
+	if m.URL.String() == "" {
+		givenU, _ := url.Parse(u)
+		m.URL = *givenU
+	}
+
+	return &m, nil
 }
 
 func ParseData(b io.Reader, m *metadata.Metadata) {
