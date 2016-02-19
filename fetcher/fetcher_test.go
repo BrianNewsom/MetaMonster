@@ -12,7 +12,7 @@ import (
 const testDir = "_test_res"
 
 func TestParseData(t *testing.T) {
-	files := []string{"medium.html", "nytimes.html", "theguardian.html", "blog.html"}
+	files := []string{"medium.html", "nytimes.html", "theguardian.html", "blog.html", "dailycamera.html"}
 
 	for _, f := range files {
 

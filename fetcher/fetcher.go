@@ -34,17 +34,17 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 		}
 		if n.Type == html.ElementNode && n.Data == "meta" {
 			for _, a := range n.Attr {
-				if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
+				if descriptionMatcher(a) {
 					m.Description = getContent(n.Attr)
-				} else if a.Key == "property" && a.Val == "og:title" {
+				} else if titleMatcher(a) {
 					m.Title = getContent(n.Attr)
-				} else if (a.Key == "name" && a.Val == "author") || (a.Key == "property" && a.Val == "article:author") {
+				} else if authorMatcher(a) {
 					m.Author = getContent(n.Attr)
-				} else if a.Key == "property" && a.Val == "og:image" {
+				} else if imageMatcher(a) {
 					m.Image = getContent(n.Attr)
-				} else if a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published") {
+				} else if publishedMatcher(a) {
 					m.PublishedDate = getContent(n.Attr)
-				} else if a.Key == "property" && a.Val == "og:url" {
+				} else if urlMatcher(a) {
 					u, _ := url.Parse(getContent(n.Attr))
 					m.URL = *u
 				}
@@ -55,6 +55,48 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 		}
 	}
 	f(d)
+}
+
+func descriptionMatcher(a html.Attribute) bool {
+	if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
+		return true
+	}
+	return false
+}
+
+func titleMatcher(a html.Attribute) bool {
+	if a.Key == "property" && a.Val == "og:title" {
+		return true
+	}
+	return false
+}
+
+func authorMatcher(a html.Attribute) bool {
+	if (a.Key == "name" && (a.Val == "author" || a.Val == "sailthru.author")) || (a.Key == "property" && a.Val == "article:author") {
+		return true
+	}
+	return false
+}
+
+func imageMatcher(a html.Attribute) bool {
+	if a.Key == "property" && a.Val == "og:image" {
+		return true
+	}
+	return false
+}
+
+func publishedMatcher(a html.Attribute) bool {
+	if (a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published")) || (a.Key == "name" && a.Val == "sailthru.date") {
+		return true
+	}
+	return false
+}
+
+func urlMatcher(a html.Attribute) bool {
+	if a.Key == "property" && a.Val == "og:url" {
+		return true
+	}
+	return false
 }
 
 func getContent(attr []html.Attribute) string {
