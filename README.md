@@ -9,22 +9,23 @@ A Golang project allowing retrieval of HTML metadata of content driven sites.
 ## Installation
 First, [install golang if you haven't already](https://golang.org/doc/install).  Then run 
 ```sh
-  go install github.com/briannewsom/metamonster
+go get github.com/briannewsom/metamonster
+go install github.com/briannewsom/metamonster
 ```
 
 metamonster will now live at ```$GOPATH/bin/metamonster```.  I recommend adding ```$GOPATH/bin``` to your PATH for simplicity.
 
 ## Usage
 ```sh
-  metamonster -h
-  Usage of metamonster:
-  	-format="plaintext": Output data format. Options - [json,plaintext]
+metamonster -h
+Usage of metamonster:
+	-format="plaintext": Output data format. Options - [json,plaintext]
 	-url="": URL from which to retrieve metadata
 ```
 
 Or, as an example
 ```sh
-  metamonster -url="https://medium.com/@sarah_k_mock/meat-is-dead-long-live-meat-a86a7cfe7ecf" -format=json
+metamonster -url="https://medium.com/@sarah_k_mock/meat-is-dead-long-live-meat-a86a7cfe7ecf" -format=json
 ```
 
 ## Using MetaMonster in my Go project
@@ -46,6 +47,6 @@ func main(){
 ## Development
 
 ### Testing
-```
-	go test ./...
+```sh
+go test ./...
 ```
