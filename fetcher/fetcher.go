@@ -6,10 +6,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/briannewsom/metamonster/models/metadata"
 	"github.com/briannewsom/metamonster/util"
 )
+
+type MetaTag html.Attribute
 
 func GetInfoForUrl(u string) (*metadata.Metadata, error) {
 	m := metadata.Metadata{}
@@ -45,17 +48,18 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 		}
 		if n.Type == html.ElementNode && n.Data == "meta" {
 			for _, a := range n.Attr {
-				if descriptionMatcher(a) {
+				t := MetaTag(a)
+				if descriptionMatcher(t) {
 					m.Description = getContent(n.Attr)
-				} else if titleMatcher(a) {
+				} else if titleMatcher(t) {
 					m.Title = getContent(n.Attr)
-				} else if authorMatcher(a) {
+				} else if authorMatcher(t) {
 					m.Author = getContent(n.Attr)
-				} else if imageMatcher(a) {
+				} else if imageMatcher(t) {
 					m.Image = getContent(n.Attr)
-				} else if publishedMatcher(a) {
+				} else if publishedMatcher(t) {
 					m.PublishedDate = getContent(n.Attr)
-				} else if urlMatcher(a) {
+				} else if urlMatcher(t) {
 					u, _ := url.Parse(getContent(n.Attr))
 					m.URL = *u
 				}
@@ -68,52 +72,55 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 	f(d)
 }
 
-func descriptionMatcher(a html.Attribute) bool {
-	if a.Key == "name" && (a.Val == "description" || a.Val == "twitter:description") {
-		return true
+func (t MetaTag) matchesOneOf(key string, vals []string) bool {
+	for _, val := range vals {
+		if t.matches(key, val) {
+			return true
+		}
 	}
+
 	return false
 }
 
-func titleMatcher(a html.Attribute) bool {
-	if a.Key == "property" && a.Val == "og:title" {
+func (t MetaTag) matches(key string, val string) bool {
+	if strings.ToLower(t.Key) == strings.ToLower(key) && strings.ToLower(t.Val) == strings.ToLower(val) {
 		return true
 	}
+
 	return false
 }
 
-func authorMatcher(a html.Attribute) bool {
-	if (a.Key == "name" && (a.Val == "author" || a.Val == "sailthru.author")) || (a.Key == "property" && a.Val == "article:author") {
-		return true
-	}
-	return false
+func descriptionMatcher(t MetaTag) bool {
+	return t.matchesOneOf("name", []string{"description", "twitter:description"})
 }
 
-func imageMatcher(a html.Attribute) bool {
-	if a.Key == "property" && a.Val == "og:image" {
-		return true
-	}
-	return false
+func titleMatcher(t MetaTag) bool {
+	return t.matches("property", "og:title")
 }
 
-func publishedMatcher(a html.Attribute) bool {
-	if (a.Key == "property" && (a.Val == "article:published_time" || a.Val == "article:published")) || (a.Key == "name" && a.Val == "sailthru.date") {
-		return true
-	}
-	return false
+func authorMatcher(t MetaTag) bool {
+	return t.matchesOneOf("name", []string{"author", "sailthru.author"}) ||
+		t.matches("property", "article:author")
 }
 
-func urlMatcher(a html.Attribute) bool {
-	if a.Key == "property" && a.Val == "og:url" {
-		return true
-	}
-	return false
+func imageMatcher(t MetaTag) bool {
+	return t.matches("property", "og:image")
+}
+
+func publishedMatcher(t MetaTag) bool {
+	return t.matchesOneOf("property", []string{"article:published_time", "article:published"}) ||
+		t.matches("name", "sailthru.date") ||
+		t.matches("itemprop", "datepublished")
+}
+
+func urlMatcher(t MetaTag) bool {
+	return t.matches("property", "og:url")
 }
 
 func getContent(attr []html.Attribute) string {
 	for _, a := range attr {
-		if a.Key == "content" {
-			return a.Val
+		if strings.ToLower(a.Key) == "content" {
+			return strings.ToLower(a.Val)
 		}
 	}
 	return ""

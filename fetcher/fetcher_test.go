@@ -22,7 +22,7 @@ func TestGetInfoForUrl(t *testing.T) {
 }
 
 func TestParseData(t *testing.T) {
-	files := []string{"medium.html", "nytimes.html", "theguardian.html", "blog.html", "dailycamera.html"}
+	files := []string{"medium.html", "nytimes.html", "theguardian.html", "blog.html", "dailycamera.html", "latimes.html"}
 
 	for _, f := range files {
 		m := metadata.Metadata{}
