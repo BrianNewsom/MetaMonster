@@ -23,7 +23,7 @@ func (t MetaTagAttribute) matches(key string, val string) bool {
 }
 
 func descriptionMatcher(t MetaTagAttribute) bool {
-	return t.matchesOneOf("name", []string{"description", "twitter:description"})
+	return t.matchesOneOf("name", []string{"description", "twitter:description", "og:description"})
 }
 
 func titleMatcher(t MetaTagAttribute) bool {
