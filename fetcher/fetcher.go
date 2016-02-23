@@ -1,18 +1,18 @@
 package fetcher
 
 import (
-	"errors"
+	"fmt"
 	"golang.org/x/net/html"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/briannewsom/metamonster/models/metadata"
 	"github.com/briannewsom/metamonster/util"
 )
 
-type MetaTag html.Attribute
+type MetaTagAttribute html.Attribute
+type MetaTagAttributes []html.Attribute
 
 func GetInfoForUrl(u string) (*metadata.Metadata, error) {
 	m := metadata.Metadata{}
@@ -23,7 +23,7 @@ func GetInfoForUrl(u string) (*metadata.Metadata, error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return nil, errors.New("GET request failed")
+		return nil, fmt.Errorf("GET request failed")
 	}
 
 	ParseData(resp.Body, &m)
@@ -37,8 +37,13 @@ func GetInfoForUrl(u string) (*metadata.Metadata, error) {
 	return &m, nil
 }
 
-func ParseData(b io.Reader, m *metadata.Metadata) {
-	d, _ := html.Parse(b)
+func ParseData(b io.Reader, m *metadata.Metadata) error {
+	d, err := html.Parse(b)
+
+	if err != nil {
+		return fmt.Errorf("Failed to parse HTML - %s", err)
+	}
+
 	var f func(*html.Node)
 
 	f = func(n *html.Node) {
@@ -47,20 +52,21 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 			m.HTMLTitle = title
 		}
 		if n.Type == html.ElementNode && n.Data == "meta" {
-			for _, a := range n.Attr {
-				t := MetaTag(a)
+			attrs := MetaTagAttributes(n.Attr)
+			for _, a := range attrs {
+				t := MetaTagAttribute(a)
 				if descriptionMatcher(t) {
-					m.Description = getContent(n.Attr)
+					m.Description = getContent(attrs)
 				} else if titleMatcher(t) {
-					m.Title = getContent(n.Attr)
+					m.Title = getContent(attrs)
 				} else if authorMatcher(t) {
-					m.Author = getContent(n.Attr)
+					m.Author = getContent(attrs)
 				} else if imageMatcher(t) {
-					m.Image = getContent(n.Attr)
+					m.Image = getContent(attrs)
 				} else if publishedMatcher(t) {
-					m.PublishedDate = getContent(n.Attr)
+					m.PublishedDate = getContent(attrs)
 				} else if urlMatcher(t) {
-					u, _ := url.Parse(getContent(n.Attr))
+					u, _ := url.Parse(getContent(attrs))
 					m.URL = *u
 				}
 			}
@@ -70,58 +76,5 @@ func ParseData(b io.Reader, m *metadata.Metadata) {
 		}
 	}
 	f(d)
-}
-
-func (t MetaTag) matchesOneOf(key string, vals []string) bool {
-	for _, val := range vals {
-		if t.matches(key, val) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (t MetaTag) matches(key string, val string) bool {
-	if strings.ToLower(t.Key) == strings.ToLower(key) && strings.ToLower(t.Val) == strings.ToLower(val) {
-		return true
-	}
-
-	return false
-}
-
-func descriptionMatcher(t MetaTag) bool {
-	return t.matchesOneOf("name", []string{"description", "twitter:description"})
-}
-
-func titleMatcher(t MetaTag) bool {
-	return t.matches("property", "og:title")
-}
-
-func authorMatcher(t MetaTag) bool {
-	return t.matchesOneOf("name", []string{"author", "sailthru.author"}) ||
-		t.matches("property", "article:author")
-}
-
-func imageMatcher(t MetaTag) bool {
-	return t.matches("property", "og:image")
-}
-
-func publishedMatcher(t MetaTag) bool {
-	return t.matchesOneOf("property", []string{"article:published_time", "article:published"}) ||
-		t.matches("name", "sailthru.date") ||
-		t.matches("itemprop", "datepublished")
-}
-
-func urlMatcher(t MetaTag) bool {
-	return t.matches("property", "og:url")
-}
-
-func getContent(attr []html.Attribute) string {
-	for _, a := range attr {
-		if strings.ToLower(a.Key) == "content" {
-			return strings.ToLower(a.Val)
-		}
-	}
-	return ""
+	return nil
 }
