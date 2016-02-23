@@ -41,6 +41,24 @@ func TestParseData(t *testing.T) {
 	}
 }
 
+func TestTagMatcher(t *testing.T) {
+	f := "nytimes.html"
+
+	r, err := getFileReader(f)
+	m := metadata.Metadata{}
+
+	if err != nil {
+		t.Errorf("Opening test file %s returned error - %s", f, err)
+	} else {
+		ParseData(r, &m)
+		err = hasTags(m)
+
+		if err != nil {
+			t.Errorf("File %s returned error - %s", f, err)
+		}
+	}
+}
+
 func getFileReader(name string) (io.Reader, error) {
 	r, err := os.Open(testDir + "/" + name)
 
@@ -49,6 +67,14 @@ func getFileReader(name string) (io.Reader, error) {
 	}
 
 	return r, nil
+}
+
+func hasTags(m metadata.Metadata) error {
+	if len(m.Tags) == 0 {
+		return errors.New("No Tags")
+	}
+
+	return nil
 }
 
 func hasAllData(m metadata.Metadata) error {

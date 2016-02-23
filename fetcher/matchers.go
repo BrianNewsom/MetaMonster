@@ -35,6 +35,10 @@ func authorMatcher(t MetaTagAttribute) bool {
 		t.matches("property", "article:author")
 }
 
+func tagMatcher(t MetaTagAttribute) bool {
+	return t.matches("property", "article:tag")
+}
+
 func imageMatcher(t MetaTagAttribute) bool {
 	return t.matches("property", "og:image")
 }

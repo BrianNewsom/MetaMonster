@@ -61,6 +61,8 @@ func ParseData(b io.Reader, m *metadata.Metadata) error {
 					m.Title = getContent(attrs)
 				} else if authorMatcher(t) {
 					m.Author = getContent(attrs)
+				} else if tagMatcher(t) {
+					m.Tags = append(m.Tags, getContent(attrs))
 				} else if imageMatcher(t) {
 					m.Image = getContent(attrs)
 				} else if publishedMatcher(t) {
