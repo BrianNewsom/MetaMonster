@@ -56,7 +56,7 @@ func urlMatcher(t MetaTagAttribute) bool {
 func getContent(attrs MetaTagAttributes) string {
 	for _, a := range attrs {
 		if strings.ToLower(a.Key) == "content" {
-			return strings.ToLower(a.Val)
+			return a.Val
 		}
 	}
 	return ""
