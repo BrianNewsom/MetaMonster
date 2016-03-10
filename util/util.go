@@ -8,7 +8,7 @@ import (
 	"net/http/cookiejar"
 )
 
-func BuildHttpClient(insecureSkipVerify bool, cookieJar bool, maxRedirects int, client *http.Client) {
+func BuildHttpClient(insecureSkipVerify bool, cookieJar bool, maxRedirects int, client *http.Client) error {
 	// If we're having ssl issues, enable this to ignore the cert
 	client.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -36,9 +36,11 @@ func BuildHttpClient(insecureSkipVerify bool, cookieJar bool, maxRedirects int, 
 
 		jar, err := cookiejar.New(&options)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		client.Jar = jar
 	}
+
+	return nil
 }
