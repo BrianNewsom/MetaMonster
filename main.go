@@ -29,7 +29,8 @@ func main() {
 		case "plaintext":
 			metadata.PrintMetadata(*m)
 		case "json":
-			fmt.Printf("%s", m.ToJson())
+			json, _ := m.ToJson()
+			fmt.Printf("%s", json)
 		default:
 			fmt.Printf("Unrecognized output format %s.  Please try json or plaintext", *format)
 		}

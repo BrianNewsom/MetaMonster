@@ -18,14 +18,14 @@ type Metadata struct {
 	URL           url.URL  `json:"url"`
 }
 
-func (m Metadata) ToJson() []byte {
+func (m Metadata) ToJson() ([]byte, error) {
 	j, err := json.Marshal(m)
 
 	if err != nil {
-		panic(err)
+		return []byte{0}, err
 	}
 
-	return j
+	return j, nil
 }
 
 func PrintMetadata(m Metadata) {
